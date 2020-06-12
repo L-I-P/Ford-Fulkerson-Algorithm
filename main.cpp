@@ -212,6 +212,44 @@ void printMatrixOutput()
     }
 }
 
+//подсчет числа максимального потока
+int maximumFlowNumber()
+{
+    int max = 0;
+    for(int j = 0; j < vertices; j++)
+        max += matrixOutput[0][j];
+
+    return max;
+}
+
+//поиск сечения и вывод двух множеств
+void sectionSearch()
+{
+    int * firstPartSeparated = new int [vertices];
+    for(int i = 0; i < vertices; i++)
+        firstPartSeparated[i] = 0;
+
+    firstPartSeparated[0] = 1; //в сечении обязательно есть первый элемент
+
+    for(int i = 0; i < vertices; i++)
+        for(int  j = i; j < vertices; j++)
+        {
+            if(firstPartSeparated[i] == 1)
+            {
+                if((matrixInput[i][j] - matrixOutput[i][j]) != 0)
+                    firstPartSeparated[j] = 1;
+            }
+        }
+    cout << "First part separated: ";
+    for(int  i = 0; i < vertices; i++)
+        if(firstPartSeparated[i] == 1) cout << i + 1;
+    cout << "\n";
+
+    cout << "Second part separated: ";
+    for(int  i = 0; i < vertices; i++)
+        if(firstPartSeparated[i] != 1) cout << i + 1;
+    cout << "\n";
+}
 int main()
 {
     //чтение из файла
@@ -297,9 +335,24 @@ int main()
         duplicateSection[i] = section[i];
 
     //ищем от наибольшего
-    cout << "\nsearch from the biggest";
+    //cout << "\nsearch from the biggest";
     findOptimalRouteMax();
-    printMatrixOutput();
+    //printMatrixOutput();
+
+    int firstStream = maximumFlowNumber();
+    //cout << "Stream is equal " << firstStream << "\n";
+
+    //сохраняем найденную выходную матрицу
+    int **dublicateMatrixOutput;
+    dublicateMatrixOutput = new int *[vertices];
+    for(int i = 0; i < vertices; i++)
+        dublicateMatrixOutput[i] = new int [vertices];
+
+    for(int i = 0; i < vertices; i++)
+        for(int j = 0; j < vertices; j++)
+        {
+            dublicateMatrixOutput[i][j] = matrixOutput[i][j];
+        }
 
     //восстанавливаем найденные пути, их значения и освобождаем память дублирующих
     for(int i = 0; i < (vertices*vertices); i++)
@@ -321,10 +374,27 @@ int main()
             matrixOutput[i][j] = 0;
 
     //ищем от наименьшего
-    cout << "\nsearch from the smallest";
+    //cout << "\nsearch from the smallest";
     findOptimalRouteMin();
-    printMatrixOutput();
 
+    //cout << "Stream is equal " << maximumFlowNumber() << "\n";
+    if(firstStream > maximumFlowNumber())
+    {
+        for(int i = 0; i < vertices; i++)
+            for(int j = 0; j < vertices; j++)
+            {
+                matrixOutput[i][j] = dublicateMatrixOutput[i][j];
+            }
+    }
+    else firstStream = maximumFlowNumber();
+
+    printMatrixOutput();
+    cout << "\nStream is equal " << firstStream << "\n";
+
+    sectionSearch();
+
+    for(int i = 0; i < (vertices); i++)
+        delete[] dublicateMatrixOutput[i];
 
     delete[] route;
     delete[] section;
